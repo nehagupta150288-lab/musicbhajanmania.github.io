@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Music Generator</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f6f7fb;
+        padding: 20px;
+        max-width: 720px;
+        margin: auto;
+    }
+    h1 { text-align: center; color: #333; }
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-top: 20px;
+    }
+    textarea {
+        width: 100%;
+        height: 140px;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        margin-top: 10px;
+        resize: vertical;
+    }
+    select, button {
+        width: 100%;
+        padding: 12px;
+        margin-top: 10px;
+        border-radius: 8px;
+        border: 1px solid #aaa;
+        font-size: 16px;
+    }
+    button {
+        background: #0066ff;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    button:hover { background: #004bcc; }
+
+    .checkbox-group label {
+        display: block;
+        margin: 5px 0;
+    }
+
+    #audio-player {
+        width: 100%;
+        margin-top: 20px;
+        display: none;
+    }
+
+    #loading {
+        display: none;
+        text-align: center;
+        margin-top: 20px;
+        font-size: 18px;
+        color: #555;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>🎵 AI Music Generator</h1>
+
+<div class="card">
+
+    <label><b>Enter Lyrics</b></label>
+    <textarea id="lyrics" placeholder="Type your song lyrics here..."></textarea>
+
+    <label><b>Choose Voice Type</b></label>
+    <select id="voice">
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+    </select>
+
+    <label><b>Choose Style</b></label>
+    <select id="style">
+        <option value="bhajan">Bhajan</option>
+        <option value="classical">Classical</option>
+        <option value="pop">Pop</option>
+        <option value="folk">Folk</option>
+    </select>
+
+    <label><b>Select Melody Type</b></label>
+    <select id="melody">
+        <option value="auto">Auto-generate</option>
+        <option value="simple">Simple Tune</option>
+        <option value="classical">Classical Melody</option>
+    </select>
+
+    <label><b>Select Instruments</b></label>
+    <div class="checkbox-group">
+        <label><input type="checkbox" value="flute" class="instrument"> Flute</label>
+        <label><input type="checkbox" value="dholak" class="instrument"> Dholak</label>
+        <label><input type="checkbox" value="piano" class="instrument"> Piano</label>
+        <label><input type="checkbox" value="guitar" class="instrument"> Guitar</label>
+        <label><input type="checkbox" value="tabla" class="instrument"> Tabla</label>
+    </div>
+
+    <button onclick="generateSong()">Generate Song 🎶</button>
+
+    <div id="loading">⏳ Generating your song... please wait.</div>
+
+    <audio id="audio-player" controls></audio>
+
+</div>
+
+<script>
+const BACKEND_URL = "http://YOUR-BACKEND-SERVER:8000/generate"; 
+// Replace with your real backend URL
+
+async function generateSong() {
+    const lyrics = document.getElementById("lyrics").value.trim();
+    const voice = document.getElementById("voice").value;
+    const style = document.getElementById("style").value;
+    const melody = document.getElementById("melody").value;
+
+    // Collect selected instruments
+    const instruments = Array.from(document.querySelectorAll(".instrument:checked"))
+                            .map(i => i.value);
+
+    if (!lyrics) {
+        alert("Please enter lyrics!");
+        return;
+    }
+
+    document.getElementById("loading").style.display = "block";
+    document.getElementById("audio-player").style.display = "none";
+
+    const payload = {
+        lyrics: lyrics,
+        voice_type: voice,
+        style: style,
+        melody_type: melody,
+        instruments: instruments
+    };
+
+    try {
+        const response = await fetch(BACKEND_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            alert("Server error. Check backend logs.");
+            return;
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        const audio = document.getElementById("audio-player");
+        audio.src = url;
+        audio.style.display = "block";
+
+    } catch (error) {
+        alert("Failed to connect to server!");
+        console.error(error);
+    }
+
+    document.getElementById("loading").style.display = "none";
+}
+</script>
+
+</body>
+</html>
